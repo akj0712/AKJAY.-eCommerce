@@ -1,4 +1,7 @@
 import Product from "../models/product.js";
+import { createError } from "../utils/error.js";
+
+//** Always use trycatch block with async function or asyncHandler
 
 //** CREATE -- ADMIN
 export const createProduct = async (req, res, next) => {
@@ -7,7 +10,7 @@ export const createProduct = async (req, res, next) => {
     const savedProduct = await newProduct.save();
     res.status(201).json({ success: true, savedProduct });
   } catch (err) {
-    res.status(500).json({ success: false, err });
+    next(err);
   }
 };
 
@@ -15,9 +18,14 @@ export const createProduct = async (req, res, next) => {
 export const getProduct = async (req, res, next) => {
   try {
     const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return next(createError(400, "product not found"));
+    }
+
     res.status(200).json(product);
   } catch (err) {
-    res.status(500).json({ success: false, err });
+    next(err);
   }
 };
 
@@ -25,15 +33,26 @@ export const getProduct = async (req, res, next) => {
 export const getAllProduct = async (req, res, next) => {
   try {
     const products = await Product.find();
+
+    if (products.length == 0) {
+      return next(createError(400, "no product available"));
+    }
+
     res.status(200).json({ success: true, products });
   } catch (err) {
-    res.status(500).json({ success: false, err });
+    next(err);
   }
 };
 
 //** UPDATE -- ADMIN
 export const updateProduct = async (req, res, next) => {
   try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return next(createError(400, "product not found for updation"));
+    }
+
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
@@ -41,16 +60,24 @@ export const updateProduct = async (req, res, next) => {
     );
     res.status(200).json(updatedProduct);
   } catch (err) {
-    res.status(500).json({ success: false, err });
+    next(err);
   }
 };
 
 //** DELETE
 export const deleteProduct = async (req, res, next) => {
   try {
+    const product = await Product.findById(req.params.id);
+
+    if (!product) {
+      return next(createError(400, "product not found for deletion"));
+    }
+
     await Product.findByIdAndDelete(req.params.id);
-    res.status(200).json("product has been deleted");
+    res
+      .status(200)
+      .json({ success: true, message: "product has been deleted" });
   } catch (err) {
-    res.status(500).json({ success: false, err });
+    next(err);
   }
 };

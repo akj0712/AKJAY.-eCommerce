@@ -4,6 +4,13 @@ import cors from "cors";
 import dotenv from "dotenv";
 import productRoute from "./routes/product.js";
 
+//** Handling uncaught exception
+process.on("uncaughtException", (err) => {
+  console.log(`Error: ${err.message}`);
+  console.log("shutting down server due to Uncaught Exception");
+  process.exit(1);
+});
+
 const app = express();
 dotenv.config();
 
@@ -25,9 +32,32 @@ app.use(express.json());
 
 app.use("/api/v1", productRoute);
 
+// ** Error handling middleware
+app.use((err, req, res, next) => {
+  let errorStatus = err.status || 500;
+  let errorMessage = err.message || "Something went wrong!";
+  if (err.name === "CastError") {
+    errorMessage = `resource not found. Invalid: ${err.path}`;
+    errorStatus = 400;
+  }
+  return res.status(errorStatus).json({
+    success: false,
+    status: errorStatus,
+    message: errorMessage,
+    stack: err.stack,
+  });
+});
 
-
-app.listen(process.env.PORT || 4000, () => {
+const server = app.listen(process.env.PORT || 4000, () => {
   connect();
   console.log(`server is running ${process.env.PORT}`);
+});
+
+//** Unhandled Promise rejection
+process.on("unhandledRejection", (err) => {
+  console.log(`Error: ${err.message}`);
+  console.log("shutting down server due to unhandled Promise Rejection");
+  server.close(() => {
+    process.exit(1);
+  });
 });
