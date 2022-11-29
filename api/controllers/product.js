@@ -1,4 +1,5 @@
 import Product from "../models/product.js";
+import { ApiFeatures } from "../utils/apiFeatures.js";
 import { createError } from "../utils/error.js";
 
 //** Always use trycatch block with async function or asyncHandler
@@ -31,14 +32,20 @@ export const getProduct = async (req, res, next) => {
 
 //** GET ALL
 export const getAllProduct = async (req, res, next) => {
+  const resultPerPage = 5;
+  const productCount = await Product.countDocuments();
   try {
-    const products = await Product.find();
+    const apiFeatures = new ApiFeatures(Product.find(), req.query)
+      .search()
+      .filter()
+      .pagination(resultPerPage);
+    const products = await apiFeatures.query;
 
-    if (products.length == 0) {
+    if (productCount == 0) {
       return next(createError(400, "no product available"));
     }
 
-    res.status(200).json({ success: true, products });
+    res.status(200).json({ success: true, products, productCount });
   } catch (err) {
     next(err);
   }
