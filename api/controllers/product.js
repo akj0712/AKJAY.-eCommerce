@@ -1,4 +1,4 @@
-import Product from "../models/product.js";
+import Product from "../models/Product.js";
 import { ApiFeatures } from "../utils/apiFeatures.js";
 import { createError } from "../utils/error.js";
 
