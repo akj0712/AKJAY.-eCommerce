@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
 import productRoute from "./routes/product.js";
+import userRoute from "./routes/user.js";
+import cookieParser from "cookie-parser";
 
 //** Handling uncaught exception
 process.on("uncaughtException", (err) => {
@@ -28,9 +30,11 @@ mongoose.connection.on("disconnected", () => {
 
 // ** middleware (able to reach our request and response before sending anything to the user)
 app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 
 app.use("/api/v1", productRoute);
+app.use("/api/v1", userRoute);
 
 // ** Error handling middleware
 app.use((err, req, res, next) => {
@@ -40,6 +44,7 @@ app.use((err, req, res, next) => {
     errorMessage = `resource not found. Invalid: ${err.path}`;
     errorStatus = 400;
   }
+
   return res.status(errorStatus).json({
     success: false,
     status: errorStatus,

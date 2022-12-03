@@ -6,6 +6,7 @@ import { createError } from "../utils/error.js";
 
 //** CREATE -- ADMIN
 export const createProduct = async (req, res, next) => {
+  req.body.user = req.user.id;
   const newProduct = new Product(req.body);
   try {
     const savedProduct = await newProduct.save();
