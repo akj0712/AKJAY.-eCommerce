@@ -1,9 +1,12 @@
 import express from "express";
 import {
   createProduct,
+  createProductReview,
   deleteProduct,
+  deleteReviews,
   getAllProduct,
   getProduct,
+  getProductReviews,
   updateProduct,
 } from "../controllers/product.js";
 import { authorizeRoles, isAuthenticatedUser } from "../utils/auth.js";
@@ -15,24 +18,30 @@ router.get("/product/:id", getProduct);
 router.get("/products", getAllProduct);
 
 router.post(
-  "/product/new",
+  "/admin/product/new",
   isAuthenticatedUser,
   authorizeRoles("admin"),
   createProduct
 );
 
 router.put(
-  "/product/:id",
+  "/admin/product/:id",
   isAuthenticatedUser,
   authorizeRoles("admin"),
   updateProduct
 );
 
 router.delete(
-  "/product/:id",
+  "/admin/product/:id",
   isAuthenticatedUser,
   authorizeRoles("admin"),
   deleteProduct
 );
+
+router.put("/review", isAuthenticatedUser, createProductReview);
+
+router.get("/reviews", getProductReviews);
+
+router.delete("/reviews", isAuthenticatedUser, deleteReviews);
 
 export default router;

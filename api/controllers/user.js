@@ -113,29 +113,148 @@ export const resetPassword = async (req, res, next) => {
     .update(req.params.token)
     .digest("hex");
 
-  const user = await User.findOne({
-    resetPasswordToken,
-    resetPasswordExpire: { $gt: Date.now() },
-  });
+  try {
+    const user = await User.findOne({
+      resetPasswordToken,
+      resetPasswordExpire: { $gt: Date.now() },
+    });
 
-  if (!user) {
-    return next(
-      new ErrorHander(
-        "Reset Password Token is invalid or has been expired",
-        400
-      )
-    );
+    if (!user) {
+      return next(
+        createError(404, "Reset Password Token is invalid or has been expired")
+      );
+    }
+
+    if (req.body.password !== req.body.confirmPassword) {
+      return next(createError(400, "Password does not match"));
+    }
+
+    user.password = req.body.password;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+
+    await user.save();
+
+    sendToken(user, 200, res);
+  } catch (err) {
+    next(err);
   }
+};
 
-  if (req.body.password !== req.body.confirmPassword) {
-    return next(new ErrorHander("Password does not password", 400));
+//** get user details
+export const getUserDetails = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    res.status(200).json({ success: true, user });
+  } catch (err) {
+    next(err);
   }
+};
 
-  user.password = req.body.password;
-  user.resetPasswordToken = undefined;
-  user.resetPasswordExpire = undefined;
+//** update user
+export const updatePassword = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id).select("+password");
 
-  await user.save();
+    const isPasswordMatch = await user.comparePassword(req.body.oldpassword);
 
-  sendToken(user, 200, res);
+    if (!isPasswordMatch) {
+      return next(createError(400, "old password password is incorrect"));
+    }
+
+    if (req.body.newPassword !== req.body.confirmPassword) {
+      return next(createError(400, "password don't match"));
+    }
+
+    user.password = req.body.newPassword;
+    await user.save();
+
+    sendToken(user, 200, res);
+  } catch (err) {
+    next(err);
+  }
+};
+
+//** update user profile
+export const updateProfile = async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+  };
+
+  //profile pic
+  try {
+    const user = await User.findByIdAndUpdate(req.user.id, newUserData, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+
+    res.status(200).json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//** get all users(admin)
+export const getAllUsers = async (req, res, next) => {
+  try {
+    const users = await User.find();
+    res.status(200).json({ users });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//** get single users(admin)
+export const getSingleUser = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return next(
+        createError(400, `user doesn't exit with id: ${req.params.id}`)
+      );
+    }
+    res.status(200).json({ success: true, user });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//** update user role (admin)
+export const updateUserRole = async (req, res, next) => {
+  const newUserData = {
+    name: req.body.name,
+    email: req.body.email,
+    role: req.body.role,
+  };
+
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, newUserData, {
+      new: true,
+      runValidators: true,
+      useFindAndModify: false,
+    });
+    if (!user) {
+      return next(
+        createError(400, `user doesn't exit with id: ${req.params.id}`)
+      );
+    }
+    res.status(200).json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//** delete user (admin)
+export const deleteUser = async (req, res, next) => {
+  //remove profilepic
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    res
+      .status(200)
+      .json({ success: true, message: "user deleted successfully" });
+  } catch (err) {
+    next(err);
+  }
 };
