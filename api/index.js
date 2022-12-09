@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import productRoute from "./routes/product.js";
 import userRoute from "./routes/user.js";
+import orderRoute from "./routes/order.js";
 import cookieParser from "cookie-parser";
 
 //** Handling uncaught exception
@@ -35,6 +36,7 @@ app.use(express.json());
 
 app.use("/api/v1", productRoute);
 app.use("/api/v1", userRoute);
+app.use("/api/v1", orderRoute);
 
 // ** Error handling middleware
 app.use((err, req, res, next) => {
