@@ -20,9 +20,9 @@ const Footer = () => {
 
       <div className="rightFooter">
         <h4>Follow Us</h4>
-        <a href="">Twitter</a>
-        <a href="">LinkedIn</a>
-        <a href="">GitHub</a>
+        <a href="https://twitter.com/akj0712">Twitter</a>
+        <a href="https://www.linkedin.com/in/akj0712/">LinkedIn</a>
+        <a href="https://github.com/akj0712">GitHub</a>
       </div>
     </footer>
   );
